@@ -55,9 +55,16 @@ func (c *TCPConn) readFrom(r io.Reader) (int64, error) {
 	return genericReadFrom(c, r)
 }
 
-// TODO: replace with fast path
 func (c *TCPConn) writeTo(w io.Writer) (int64, error) {
+	// todo: add splice for fast path
 	return genericWriteTo(w, c)
+}
+
+func (c *TCPConn) writeAtMostTo(remain int64, w io.Writer) (int64, error) {
+	if written, err, handled := spliceWriteN(c.fd, remain, w); handled {
+		return written, err
+	}
+	return genericWriteTo(w, io.LimitReader(c, remain))
 }
 
 func (sd *sysDialer) dialTCP(ctx context.Context, laddr, raddr *TCPAddr) (*TCPConn, error) {

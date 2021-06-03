@@ -56,7 +56,19 @@ func (f *File) readFromConn(r io.Reader) (written int64, handled bool, err error
 		}
 	}
 
-	writerTo, ok := r.(io.WriterTo)
-	println(writerTo)
-	return 0, false, nil
+	// todo: change this to something better?
+	writerTo, ok := r.(interface {
+		WriteAtMostTo(remain int64, w io.Writer) (int64, error)
+	})
+
+	if !ok {
+		return 0, false, nil
+	}
+
+	written, err = writerTo.WriteAtMostTo(remain, f)
+	if lr != nil {
+		lr.N -= written
+	}
+
+	return written, true, err
 }
