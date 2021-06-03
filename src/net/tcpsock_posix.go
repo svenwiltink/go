@@ -55,6 +55,11 @@ func (c *TCPConn) readFrom(r io.Reader) (int64, error) {
 	return genericReadFrom(c, r)
 }
 
+// TODO: replace with fast path
+func (c *TCPConn) writeTo(w io.Writer) (int64, error) {
+	return genericWriteTo(w, c)
+}
+
 func (sd *sysDialer) dialTCP(ctx context.Context, laddr, raddr *TCPAddr) (*TCPConn, error) {
 	if testHookDialTCP != nil {
 		return testHookDialTCP(ctx, sd.network, laddr, raddr)

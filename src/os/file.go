@@ -151,11 +151,14 @@ func (f *File) ReadFrom(r io.Reader) (n int64, err error) {
 	if err := f.checkValid("write"); err != nil {
 		return 0, err
 	}
-	n, handled, e := f.readFrom(r)
-	if !handled {
-		return genericReadFrom(f, r) // without wrapping
+	if n, handled, e := f.readFrom(r); handled {
+		return n, f.wrapErr("write", e)
 	}
-	return n, f.wrapErr("write", e)
+	if n, handled, e := f.readFromConn(r); handled {
+		return n, f.wrapErr("write", e)
+	}
+
+	return genericReadFrom(f, r) // without wrapping
 }
 
 func genericReadFrom(f *File, r io.Reader) (int64, error) {

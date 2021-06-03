@@ -44,3 +44,19 @@ func (f *File) readFrom(r io.Reader) (written int64, handled bool, err error) {
 	}
 	return written, handled, NewSyscallError("copy_file_range", err)
 }
+
+func (f *File) readFromConn(r io.Reader) (written int64, handled bool, err error) {
+	remain := int64(1 << 62)
+
+	lr, ok := r.(*io.LimitedReader)
+	if ok {
+		remain, r = lr.N, lr.R
+		if remain <= 0 {
+			return 0, true, nil
+		}
+	}
+
+	writerTo, ok := r.(io.WriterTo)
+	println(writerTo)
+	return 0, false, nil
+}
