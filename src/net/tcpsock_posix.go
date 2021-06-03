@@ -56,7 +56,10 @@ func (c *TCPConn) readFrom(r io.Reader) (int64, error) {
 }
 
 func (c *TCPConn) writeTo(w io.Writer) (int64, error) {
-	// todo: add splice for fast path
+	var remain int64 = 1 << 62 // by default, copy until EOF
+	if written, err, handled := spliceWriteN(c.fd, remain, w); handled {
+		return written, err
+	}
 	return genericWriteTo(w, c)
 }
 
